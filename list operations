@@ -1,0 +1,228 @@
+#include "list_operations.h"
+#include <stdlib.h>
+
+Node *sort_linked_list_by_values(Node *head)
+{
+    // Sort a linked list with signs (the given linked list is sorted by abs value)
+    if (head == NULL || head->next == NULL) {
+        return head;
+    }
+
+    // Create three pointers to keep track during traversal
+    Node *current = head;
+    Node *prev = NULL;
+    Node *next = NULL;
+
+    while (current != NULL && current->next != NULL) {
+        // The negative value must come after a positive one
+        if(current->next->data < 0 && current->data >= 0) {
+            // If so, move negative node to front
+            next = current->next; // Set next pointer to the negative node
+            current->next = next->next; // Link the node before the negative onde with the node after the negative one
+
+            next->next = head; // Move the negative node in front of the head
+            head = next; // Set the new head to the negative node
+        } else {
+            // If not, keep traversing
+            current = current->next;
+        }
+    }
+
+    return head;
+}
+
+Node *find_middle_element(Node *head)
+{
+    // If the list is empty, return null
+    if (head == NULL) {
+        return NULL;
+    }
+
+    // Initialize two pointers for Tortoise and Hare algorithm
+    Node *slow = head;
+    Node *fast = head;
+
+    while (fast != NULL && fast->next != NULL) {
+        slow = slow->next; // Traverses one node at once
+        fast = fast->next->next; // Traverses two nodes at one
+    }
+
+    return slow;
+}
+
+Node *find_similar_elements(Node *head1, Node *head2)
+{
+    // The head and tail pointers for the commons list
+    Node *result_head = NULL;
+    Node *result_tail = NULL;
+
+    // Traversal pointers for two given lists
+    Node *current1 = head1;
+    Node *current2 = head2;
+
+    // First loop to traverse the first list
+    while(current1 != NULL) {
+        current2 = head2;
+        // Second loop to traverse the second list for each node of the first list
+        while(current2 != NULL) {
+            if(current1->data == current2->data) { // Common data detected
+                // Add to the result list
+                if(result_head == NULL) {
+                    // If the commons list is empty, create a node and make the head and tail point to it
+                    Node *new_node = create_node_ptr(current1->data);
+                    result_head = new_node;
+                    result_tail = new_node;
+                } else {
+                    // Else, simply add to the tail of the commons list
+                    result_tail = add_to_tail(result_tail, current1->data);
+                }
+                break; // If common element is found, break the loop
+                // Note that in this problem, the given list is considered not including duplicates
+            }
+            current2 = current2->next;
+        }
+        current1 = current1->next;
+    }
+
+    return result_head;
+}
+
+Node *reverse_linked_list(Node *head)
+{
+    // Create three pointers to keep track during traversal
+    // During the loop, the current pointer is always set between prev and next
+    Node *prev = NULL;
+    Node *current = head;
+    Node *next = NULL;
+
+    while (current != NULL) {
+        next = current->next; // Set next pointer to point the node after current
+        current->next = prev; // Move the next pointer of the current to the previous node
+        prev = current; // Set prev pointer to point the node before current
+
+        current = next; // Move the current to the next node to keep traversing
+    }
+
+    // Return prev as the new head of the reversed list
+    return prev;
+}
+
+bool is_palindrome(Node *head)
+{
+    // Trivial conditions, if list is empty or has one element, it is automatically palindrome
+    if (head == NULL || head->next == NULL) {
+        return true;
+    }
+
+    // Find the middle node of the list
+    Node *middle = find_middle_element(head);
+
+    // Reverse the second half of the list
+    Node *second_half = reverse_linked_list(middle);
+
+    // Compare the two halves
+    Node *first_half = head;
+    
+    // Temporary node to traverse the reversed second half
+    Node *tmp = second_half;
+    bool palindrome = true; // Variable initialized to true
+
+    // Traverse both halves at the same loop
+    while(tmp != NULL) {
+        // If the nodes are not equal
+        if(first_half->data != tmp->data) {
+            palindrome = false; // The list is not palindrome
+            break;
+        }
+        // Traverse both lists
+        first_half = first_half->next;
+        tmp = tmp->next;
+    }
+
+    // Reverse the second half back to get the initial configuration of the list
+    reverse_linked_list(second_half);
+
+    return palindrome;
+}
+
+Node *rotate_singly_list(Node *head, int r)
+{
+    // Trivial conditions, if the list is empty or the given rotation number is zero, do not rotate
+    if (r == 0 || head == NULL) {
+        return head;
+    }
+
+    // Set variables for traversal
+    Node *current = head;
+    int count = 1;
+
+    // Traverse to (r-1)st node (indexes starting from zero)
+    while (count < r && current != NULL) {
+        current = current->next;
+        count++;
+    }
+
+    // If r is not in the range, do not rotate
+    if (current == NULL) {
+        return head;
+    }
+    
+    // Another pointer for another traversal
+    Node *rth = current;
+
+    // Traverse to the end of the list to get the rotating partition
+    while (current->next != NULL) {
+        current = current->next;
+    }
+
+    // Connect the end of the list to the beginning, making it circular
+    current->next = head;
+
+    head = rth->next; // Move the head to the new head we want
+    // Break the circular connection of the linked list
+    rth->next = NULL;
+
+    return head;
+}
+
+DoublyNode *rotate_doubly_list(DoublyNode *head, int r)
+{
+    // Trivial conditions, if the list is empty or the given rotation number is zero, do not rotate
+    if (r == 0 || head == NULL) {
+        return head;
+    }
+
+    // Set variables for traversal
+    DoublyNode *current = head;
+    int count = 1;
+
+    // Traverse to (r-1)st node (indexes starting from zero)
+    while (count < r && current != NULL) {
+        current = current->next;
+        count++;
+    }
+
+    // If r is not in the range, do not rotate
+    if (current == NULL) {
+        return head;
+    }
+    
+    // Another pointer for another traversal
+    DoublyNode *rth = current;
+
+    // Traverse to the end of the list to get the rotating partition
+    while (current->next != NULL) {
+        current = current->next;
+    }
+
+    // Connect the end of the list to the beginning, making it circular
+    current->next = head;
+    head->prev = current;
+
+    head = rth->next; // Move the head to the new head we want
+    // Break the circular connections of the linked list
+    head->prev = NULL;
+    rth->next = NULL;
+
+    return head;
+}
