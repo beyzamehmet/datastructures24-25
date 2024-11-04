@@ -1,0 +1,96 @@
+#include "doubly_linked_list.h"
+#include <stdlib.h>
+
+// Creating a new node pointer
+DoublyNode *create_doubly_node_ptr(int k)
+{
+    DoublyNode *newNode = (DoublyNode *) malloc(sizeof(DoublyNode));
+    newNode->data = k;
+    newNode->next = NULL;
+    newNode->prev = NULL;
+
+    return newNode;
+}
+
+// Adding node to the head of a non-empty doubly linked list
+DoublyNode *add_to_head(DoublyNode *head, int k)
+{
+    DoublyNode *newNode = create_doubly_node_ptr(k);
+
+    newNode->next = head;
+    head->prev = newNode;
+    head = newNode;
+
+    return head;
+}
+
+// Adding node to the tail of a non-empty doubly linked list
+DoublyNode *add_to_tail(DoublyNode *tail, int k)
+{
+    DoublyNode *newNode = create_doubly_node_ptr(k);
+
+    tail->next = newNode;
+    newNode->prev = tail;
+    tail = newNode;
+
+    return tail;
+}
+
+// Remove a node at a specific index in the linked list
+DoublyNode* remove_from_linked_list(DoublyNode* head, int index) {
+    if (index < 0 || head == NULL) return head;
+
+    DoublyNode* temp = head;
+
+    // If the head node is to be removed
+    if (index == 0) {
+        head = temp->next;  // Move the head to the next node
+        free(temp);         // Free the old head node
+        head->prev = NULL;  // Set the previous pointer of the new head to null
+        return head;        // Return the new head
+    }
+
+    // Traverse to the node before the one to be removed
+    DoublyNode* prev = NULL;
+    int count = 0;
+    while (temp != NULL && count < index) {
+        prev = temp;
+        temp = temp->next;
+        count++;
+    }
+
+    // If the index is out of bounds
+    if (temp == NULL) return head;
+
+    // Remove the node
+    prev->next = temp->next;
+    temp->next->prev = prev;
+    free(temp);
+
+    return head;  // Return the unchanged head
+}
+
+// Read a value from the linked list by index
+int read_from_linked_list(DoublyNode* head, int index) {
+    int count = 0;
+    DoublyNode* temp = head;
+    while (temp != NULL) {
+        if (count == index) {
+            return temp->data;
+        }
+        temp = temp->next;
+        count++;
+    }
+    return -1;  // Return -1 if index is out of bounds
+}
+
+// Free all nodes in the linked list
+void destroy_linked_list(DoublyNode* head) {
+    DoublyNode* current = head;
+    DoublyNode* nextNode = NULL;
+    while (current != NULL) {
+        nextNode = current->next;
+        free(current);
+        current = nextNode;
+    }
+}
