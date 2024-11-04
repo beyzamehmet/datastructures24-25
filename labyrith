@@ -1,0 +1,172 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct LabState {
+    char labyrinth[11][11];
+    int current_x;
+    int current_y;
+} LabState;
+
+typedef struct Node {
+    LabState data;
+    struct Node *next;
+} Node;
+
+
+typedef struct Stack {
+    Node *head;
+    int elemcount;
+} Stack;
+
+void init_stack(Stack* stack) {
+    stack->head = NULL;
+    stack->elemcount = 0;
+}
+
+
+void push(Stack *stack, LabState e) {
+    Node *newnode = (Node*)malloc(sizeof(Node));
+    newnode->data = e;
+    newnode->next = stack->head;
+    stack->head = newnode;
+    stack->elemcount++;
+}
+
+LabState pop(Stack *stack) {
+    LabState result = stack->head->data;
+
+    if (stack->head != NULL) {
+        Node *old = stack->head;
+        stack->head = stack->head->next;
+        free(old);
+        stack->elemcount--;
+    }
+    return result;
+}
+
+void fill_with(LabState *state, char from[][11]) {
+    for (int i = 0; i < 11; i++) {
+        for (int j = 0; j < 11; j++) {
+            state->labyrinth[i][j] = from[i][j];
+        }
+    }
+}
+
+void set_current_xy(LabState *state) {
+    for (int i = 0; i < 11; i++) {
+        for (int j = 0; j < 11; j++) {
+            if (state->labyrinth[i][j] == 'O') {
+                state->current_x = i;
+                state->current_y = j;
+                return;
+            }
+        }
+    }
+}
+
+int checkfinished(LabState *state) {
+    if (state->current_y > 0 && state->labyrinth[state->current_x][state->current_y-1] == 'F')
+        return 1;
+    else if (state->current_y < 10 && state->labyrinth[state->current_x][state->current_y+1] == 'F')
+        return 1;
+    else if (state->current_x > 0 && state->labyrinth[state->current_x-1][state->current_y] == 'F')
+        return 1;
+    else if (state->current_x < 10 && state->labyrinth[state->current_x+1][state->current_y] == 'F')
+        return 1;
+    else
+        return 0;
+}
+
+void printLabyrinth(LabState *state) {
+    for (int i = 0; i < 11; i++) {
+        for (int j = 0; j < 11; j++) {
+            printf("%c", state->labyrinth[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
+int main() {
+    char filename[] = "lab1.txt";
+    LabState last_state;
+    Stack mystack;
+    init_stack(&mystack);
+
+    FILE *infile = fopen(filename, "r");
+    if (infile == NULL) {
+        printf("File not found\n");
+        return 1;
+    }
+
+    int line_id = 0;
+    char line[13];
+    while (fgets(line, sizeof(line), infile)) {
+        if (line[strlen(line) - 1] == '\n') {
+            line[strlen(line) - 1] = '\0';
+        }
+        for (int i = 0; i < 11; i++) {
+            last_state.labyrinth[line_id][i] = line[i];
+        }
+        line_id++;
+    }
+    fclose(infile);
+
+    printf("Initial Lab.\n");
+    printLabyrinth(&last_state);
+    set_current_xy(&last_state);
+
+    while (1) {
+        if (checkfinished(&last_state))
+            break;
+
+        int up = 0, down = 0, left = 0, right = 0;
+
+        if (last_state.current_y > 0 && last_state.labyrinth[last_state.current_x][last_state.current_y-1] == ' ')
+            left = 1;
+        if (last_state.current_y < 10 && last_state.labyrinth[last_state.current_x][last_state.current_y+1] == ' ')
+            right = 1;
+        if (last_state.current_x > 0 && last_state.labyrinth[last_state.current_x-1][last_state.current_y] == ' ')
+            up = 1;
+        if (last_state.current_x < 10 && last_state.labyrinth[last_state.current_x+1][last_state.current_y] == ' ')
+            down = 1;
+
+        if (up) {
+            LabState up_state;
+            fill_with(&up_state, last_state.labyrinth);
+            up_state.labyrinth[last_state.current_x-1][last_state.current_y] = 'O';
+            up_state.labyrinth[last_state.current_x][last_state.current_y] = 'X';
+            set_current_xy(&up_state);
+            push(&mystack, up_state);
+        }
+        if (down) {
+            LabState down_state;
+            fill_with(&down_state, last_state.labyrinth);
+            down_state.labyrinth[last_state.current_x+1][last_state.current_y] = 'O';
+            down_state.labyrinth[last_state.current_x][last_state.current_y] = 'X';
+            set_current_xy(&down_state);
+            push(&mystack, down_state);
+        }
+        if (left) {
+            LabState left_state;
+            fill_with(&left_state, last_state.labyrinth);
+            left_state.labyrinth[last_state.current_x][last_state.current_y-1] = 'O';
+            left_state.labyrinth[last_state.current_x][last_state.current_y] = 'X';
+            push(&mystack, left_state);
+        }
+        if (right) {
+            LabState right_state;
+            fill_with(&right_state, last_state.labyrinth);
+            right_state.labyrinth[last_state.current_x][last_state.current_y+1] = 'O';
+            right_state.labyrinth[last_state.current_x][last_state.current_y] = 'X';
+            push(&mystack, right_state);
+        }
+
+        last_state = pop(&mystack);
+        set_current_xy(&last_state);
+        printLabyrinth(&last_state);
+    }
+
+    return 0;
+}
